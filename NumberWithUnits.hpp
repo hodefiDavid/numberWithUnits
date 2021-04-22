@@ -7,6 +7,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <"WDGraph.hpp">
+
 namespace ariel {
 
     class NumberWithUnits {
@@ -95,6 +97,7 @@ namespace ariel {
         double number;
         //represent the unit of the object (100 g , unit = g)
         std::string unit;
+        static
 
     };
 

@@ -4,5 +4,5 @@ project(numberWithUnits)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(main main.cpp)
-add_executable(numberWithUnits NumberWithUnits.hpp Demo.cpp )
+add_executable(numberWithUnits NumberWithUnits.hpp Demo.cpp NodeData.hpp NodeData.cpp WDGraph.hpp WDGraph.cpp )
 add_executable(Ts NumberWithUnits.hpp NumberWithUnits.cpp Test.cpp )
