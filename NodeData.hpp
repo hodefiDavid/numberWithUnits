@@ -5,33 +5,34 @@
 
 #include <string>
 #include <list>
-#include "WDGraph.hpp"
+# pragma once
 
-class NodeData{
+class Node{
+
 public:
     //_nodeIn represent nodes that entering this node
     //the double value represent the rate between two nodes,
     //between tne node "km" and the node "m" the value of the double would be 1/1000 (because 1 km = 1000 m)
-    std::map<NodeData,double> _nodeIn;//note: if NIS==USD==EUR so i cannot use double as key in the map
+    std::map<Node,double> _nodeIn;//note: if NIS==USD==EUR so i cannot use double as key in the map
     //_nodeOut represent nodes that you can reach from this node
     //the double value represent the rate between two nodes,
     //between tne node "km" and the node "m" the value of the double would be 1/1000 (because 1 km = 1000 m)
-    std::map<NodeData,double> _nodeOut;
+    std::map<Node,double> _nodeOut;
 
 
-    explicit NodeData(const std::string& unit){
+     Node(const std::string& unit){
         this->_unit=unit;
         this->_tag=0;
     }
-    void addNodeIn(NodeData nd, double rate);
-    void addNodeOut(NodeData nd, double rate);
+    void addNodeIn(Node nd, double rate);
+    void addNodeOut(Node nd, double rate);
 
     void setTag(int tag) {
         this->_tag = tag;
     }
     int getTag() const{return this->_tag;}
 
-    std::string getUnit() const;
+    std::string getUnit();
 
 private:
     std::string _unit; //km/m/h/min...

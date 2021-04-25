@@ -8,6 +8,7 @@
 #include <utility>
 
 using namespace std;
+using namespace wdg;
 
 void WDGraph::resetTags(int num) {
     //change the tags of all the node to the given one
@@ -16,7 +17,7 @@ void WDGraph::resetTags(int num) {
     }
 }
 
-double WDGraph::shoretesPath(std::list<NodeData> *l, std::string src, std::string dst) {
+double WDGraph::shortestPath(std::string src, std::string dst) {
     if (src==dst){return 1;}
     WDGraph::resetTags(0);
     WDGraph::BFS(src, dst);
@@ -28,7 +29,7 @@ double WDGraph::shoretesPath(std::list<NodeData> *l, std::string src, std::strin
     s.push(dst);
     while (check) {
         bool insert = false;
-        NodeData *temp = &allNodes[s.top()];
+        Node *temp = &allNodes[s.top()];
         if (temp->getTag() != 1) {
             for (const auto &node :temp->_nodeIn) {
                 if (node.first.getTag() == temp->getTag() - 1 && !insert) {
@@ -44,7 +45,7 @@ double WDGraph::shoretesPath(std::list<NodeData> *l, std::string src, std::strin
     double rate=1;
     bool last = false;
     while (!s.empty() && !last){
-        NodeData *temp = &allNodes[s.top()];
+        Node *temp = &allNodes[s.top()];
         s.pop();
         rate = rate * (temp->_nodeOut[allNodes[s.top()]]);
         if(allNodes[s.top()].getTag()==allNodes[dst].getTag()){
@@ -60,7 +61,7 @@ void WDGraph::BFS(std::string src, std::string dst) {
     stack<string> s;
     s.push(src);
     while (!s.empty()) {
-        NodeData *temp = &allNodes[s.top()];
+        Node *temp = &allNodes[s.top()];
         s.pop();
 
         for (auto it = temp->_nodeOut.begin(); it != temp->_nodeOut.end(); it++) {
@@ -70,5 +71,9 @@ void WDGraph::BFS(std::string src, std::string dst) {
             }
         }
     }
+}
+
+bool WDGraph::unitExist(const std::string& unit) {
+    return this->allNodes.contains(unit);
 }
 

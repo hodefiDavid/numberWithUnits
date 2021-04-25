@@ -7,20 +7,17 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <"WDGraph.hpp">
+#include "WDGraph.hpp"
 
 namespace ariel {
 
     class NumberWithUnits {
 
-
     public:
-        NumberWithUnits(double num, std::string unitIn){
-            //check if the unit exist
-            if (unitIn=="somthing try to figure out to mange the check"){}
-            this->number=num;
-            this->unit = unitIn;
-        }
+        static void read_units (std::ifstream& file);
+
+        NumberWithUnits(const double num, const std::string unitIn);
+
         //overloading operators +=,+,-=,-
         NumberWithUnits operator+() const;
         NumberWithUnits operator-() ;
@@ -46,8 +43,6 @@ namespace ariel {
         friend  std::ostream& operator<<( std::ostream& os, const NumberWithUnits& nwu);
         friend  std::istream& operator>>( std::istream &is, NumberWithUnits &nwu);
 
-
-        static void read_units (std::ifstream& file);
 
 
         /////////////////////////need to change a bit//////////////////////////////////////////
@@ -97,8 +92,10 @@ namespace ariel {
         double number;
         //represent the unit of the object (100 g , unit = g)
         std::string unit;
-        static
 
+        static wdg::WDGraph graph;
+
+        static void buildNodesReadUnits(std::string firstU, std::string secondU, double val);
     };
 
 

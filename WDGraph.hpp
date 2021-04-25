@@ -2,35 +2,27 @@
 // Created by david on 4/21/21.
 //
 
-#ifndef WDGRAPH_WDGRAPH_HPP
-#define WDGRAPH_WDGRAPH_HPP
+
+#pragma once
 
 #include <string>
 #include <list>
 #include "NodeData.hpp"
+# pragma once
 
-class WDGraph{
-    void resetTags(int num);
-    double shoretesPath( std::list<NodeData> *l,std::string src,std::string dst);
-private:
-    std::map<std::string , NodeData> allNodes;
-    void BFS(std::string src,std::string dst);
+namespace wdg {
+    class WDGraph {
+        void resetTags(int num);
 
-};
+        double shortestPath(std::string src, std::string dst);
 
+    public:
+        std::map<std::string, Node> allNodes;
 
+        bool unitExist(const std::string &str);
+    private:
 
+        void BFS(std::string src, std::string dst);
+    };
 
-
-
-
-
-
-
-
-
-
-
-
-
-#endif //WDGRAPH_WDGRAPH_HPP
+}

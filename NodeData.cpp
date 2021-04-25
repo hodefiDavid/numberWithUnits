@@ -1,18 +1,18 @@
 //
 // Created by david on 4/22/21.
 //
-
 #include "NodeData.hpp"
+# pragma once
 
 
-void NodeData::addNodeIn(NodeData nd, double rate){
+void Node::addNodeIn(Node nd, double rate){
     this->_nodeIn[nd] = rate;
 }
-void NodeData::addNodeOut(NodeData nd, double rate){
+void Node::addNodeOut(Node nd, double rate){
     this->_nodeOut[nd] = rate;
 }
 
-std::string NodeData::getUnit() const {
+std::string Node::getUnit() {
     return this->_unit;
 }
 
