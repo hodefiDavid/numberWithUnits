@@ -39,20 +39,21 @@ namespace ariel {
         NumberWithUnits operator+=(NumberWithUnits const & other);
         NumberWithUnits operator-=(NumberWithUnits const & other) ;
 
-        friend NumberWithUnits operator-(NumberWithUnits const & other) ;
+//        friend NumberWithUnits operator-(NumberWithUnits const & other) ;
         friend NumberWithUnits operator-(const NumberWithUnits&, const NumberWithUnits&);
-        friend NumberWithUnits operator+(NumberWithUnits const & other) ;
-        friend NumberWithUnits operator+(NumberWithUnits const & other,NumberWithUnits const & other1) ;
+//        friend NumberWithUnits operator+(NumberWithUnits const & other) ;
+        friend NumberWithUnits operator+(NumberWithUnits const & a,NumberWithUnits const & b) ;
 
         //overloading operators <,>,<=,>=
-        friend  bool operator< (const NumberWithUnits& nwu1, const NumberWithUnits& nwu2);
-        friend  bool operator> (const NumberWithUnits& nwu1, const NumberWithUnits& nwu2);
-        friend  bool operator<=(const NumberWithUnits& nwu1, const NumberWithUnits& nwu2);
-        friend  bool operator>=(const NumberWithUnits& nwu1, const NumberWithUnits& nwu2);
+        friend  bool operator< (const NumberWithUnits& a, const NumberWithUnits& b);
+        friend  bool operator> (const NumberWithUnits& a, const NumberWithUnits& b);
+        friend  bool operator<=(const NumberWithUnits& a, const NumberWithUnits& b);
+        friend  bool operator>=(const NumberWithUnits& a, const NumberWithUnits& b);
 
         //overloading operators ==,!=
-        friend bool operator==(const NumberWithUnits& lhs, const NumberWithUnits& rhs);
-        friend bool operator!=(const NumberWithUnits& lhs, const NumberWithUnits& rhs);
+
+        bool operator==(const NumberWithUnits& b) const;
+        bool operator!=(const NumberWithUnits& b) const;
 
         friend  std::ostream& operator<<( std::ostream& os, const NumberWithUnits& nwu);
         friend  std::istream& operator>>( std::istream &is, NumberWithUnits &nwu);
@@ -92,7 +93,7 @@ namespace ariel {
 
         //overloading operator *
         friend NumberWithUnits operator*(const NumberWithUnits &nwu, double n);
-
+        //note: first this but friend allow to put the other obj first
         friend NumberWithUnits operator*(double number, const NumberWithUnits &nwu);
 
         friend NumberWithUnits operator*(const NumberWithUnits &nwu, int number);

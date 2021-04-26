@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <string>
 #include <map>
+#include <sstream>
 
 using namespace ariel;
 using namespace std;
@@ -84,7 +85,7 @@ void NumberWithUnits::read_units(ifstream &file) {
         str.erase(0, len + 1);
 
         //delete all the " " until we reach the value
-        while (!str.compare(0, 1, " ")) {
+        while (0 == str.compare(0, 1, " ")) {
             str.erase(0, 1);
         }
 
@@ -94,16 +95,16 @@ void NumberWithUnits::read_units(ifstream &file) {
             sendErrorReadUnits(row);
         }
         try {
-            val = stod(str.substr(0, len + 1));
+            val = stod(str.substr(0, len));// + 1
         }
             //checks for error
-        catch (invalid_argument) {
+        catch (exception&) {
             sendErrorReadUnits(row);
         }
         str.erase(0, len + 1);
 
         //delete all the " " until we reach the second unit
-        while (!str.compare(0, 1, " ")) {
+        while (0 == str.compare(0, 1, " ")) {
             str.erase(0, 1);
         }
 
@@ -160,9 +161,9 @@ NumberWithUnits NumberWithUnits::operator-=(const NumberWithUnits &other) {
     return *this;
 }
 
-NumberWithUnits ariel::operator-(const NumberWithUnits &other) {
-    return NumberWithUnits(-other.number,other.unit);
-}
+//NumberWithUnits ariel::operator-(const NumberWithUnits &other) {
+//    return NumberWithUnits(-other.number,other.unit);
+//}
 
 NumberWithUnits ariel::operator-(const NumberWithUnits &a, const NumberWithUnits &b) {
     double rate = NumberWithUnits::graph.shortestPath(b.unit, a.unit);
@@ -175,9 +176,9 @@ NumberWithUnits ariel::operator-(const NumberWithUnits &a, const NumberWithUnits
     return NumberWithUnits(number,a.unit);
 }
 
-NumberWithUnits ariel::operator+(const NumberWithUnits &other) {
-    return other;
-}
+//NumberWithUnits ariel::operator+(const NumberWithUnits &other) {
+//    return other;
+//}
 
 NumberWithUnits ariel::operator+(const NumberWithUnits &a, const NumberWithUnits &b) {
     double rate = NumberWithUnits::graph.shortestPath(b.unit, a.unit);
@@ -198,7 +199,7 @@ bool ariel::operator<(const NumberWithUnits &a, const NumberWithUnits &b) {
         throw runtime_error (error);
     }
 
-    bool ans = (a.number < rate*b.number) || (a.number < rate*b.number+TOLORANCE);
+    bool ans = (a.number < rate*b.number);// || (a.number < rate*b.number+TOLORANCE);
     return ans;
 }
 
@@ -209,7 +210,7 @@ bool ariel::operator>(const NumberWithUnits &a, const NumberWithUnits &b) {
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
         throw runtime_error (error);
     }
-    bool ans = (a.number > rate*b.number)||(a.number > rate*b.number-TOLORANCE);
+    bool ans = (a.number > rate*b.number) && (abs(a.number - rate*b.number)>TOLORANCE);
     return ans;
 }
 
@@ -235,38 +236,43 @@ bool ariel::operator>=(const NumberWithUnits &a, const NumberWithUnits &b) {
     return ans;
 }
 
-bool ariel::operator==(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
+
+bool ariel::NumberWithUnits::operator==(const NumberWithUnits& b)const{
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
-                       "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
+                       "connected to the unit: "+unit+", the unit that you entered was : "+b.unit;
         throw runtime_error (error);
     }
-    bool ans = (a.number == rate*b.number) || ((a.number <= rate*b.number + TOLORANCE)&& (a.number + TOLORANCE >= rate*b.number) );
+    bool ans = (number == rate*b.number) || ((number <= rate*b.number + TOLORANCE)&& (number + TOLORANCE >= rate*b.number) );
     return ans;
 }
 
-bool ariel::operator!=(const NumberWithUnits &a, const NumberWithUnits &b) {
-    bool ans = (a==b);
+
+bool ariel::NumberWithUnits::operator!=(const NumberWithUnits &b) const{
+    bool ans = (*this==b);
     //revert the operator ==
     return !ans;
 }
 
 std::ostream &ariel::operator<<(ostream &os, const NumberWithUnits &nwu) {
-    string str = std::to_string (nwu.number);
-    str.erase ( str.find_last_not_of('0') + 1, string::npos );
-    if (str.ends_with('.')){
-        str.erase(str.find_last_not_of('.')+1,string::npos);}
-    str= str+"["+nwu.unit+"]";
-    return os<<str;
+//    string str = std::to_string (nwu.number);
+//    str.erase ( str.find_last_not_of('0') + 1, string::npos );
+//    if (str.ends_with('.')){
+//        str.erase(str.find_last_not_of('.')+1,string::npos);}
+//    str= str+"["+nwu.unit+"]";
+//    string str = to_string(nwu.number)+"["+nwu.unit+"]";
+    return os<< nwu.number << "[" << nwu.unit << "]";
 }
 
 std::istream &ariel::operator>>(istream &is, NumberWithUnits &nwu) {
     string str;
     string tempUnit;
-    getline(is,str);
+    if (!getline(is,str,']'))
+    { sendErrorReadUnits(0);}
+
     size_t len = 0;
-    double val;
+    double val = 0;
     len = str.find('[');
     //checks for error
     if (len == -1) { sendErrorReadUnits(0);}
@@ -277,12 +283,19 @@ std::istream &ariel::operator>>(istream &is, NumberWithUnits &nwu) {
     catch (invalid_argument) {
         sendErrorReadUnits(0);
     }
-    str.erase(0, ++len);
-    len = str.find(']');
-    if (len == -1) { sendErrorReadUnits(0);}
-    tempUnit = str.substr(0, len);
+    str.erase(0, len);//+1
+//    len = str.find(']');
+//    if (len == -1) { sendErrorReadUnits(0);}
+//    tempUnit = str.substr(0, len+1);
+    tempUnit = str;
     erase(tempUnit, ' ');
-
+    if(!NumberWithUnits::graph.unitExist(tempUnit)){
+        sendErrorReadUnits(0);
+    }
+    str.erase(0, len+1);//+1//neew
+    while (0 ==str.compare(0, 1, " ")) {
+        str.erase(0, 1);
+    }
     nwu.unit = tempUnit;
     nwu.number = val;
     return is;
