@@ -18,6 +18,9 @@ test: TestCounter.o Test.o $(OBJECTS)
 tidy:
 	clang-tidy $(SOURCES) -checks=bugprone-*,clang-analyzer-*,cppcoreguidelines-*,performance-*,portability-*,readability-*,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-owning-memory --warnings-as-errors=-* --
 
+main: main.o $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
 # your_test_our_class: NumberWithUnitsTest.cpp
 # 	$(CXX) $(CXXFLAGS) NumberWithUnitsTest.cpp -o your_test_our_class
 

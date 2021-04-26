@@ -7,16 +7,27 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include "WDGraph.hpp"
+#include <stack>
+#include <list>
+#include <utility>
 
 namespace ariel {
 
     class NumberWithUnits {
 
     public:
+        /**
+        * read_units function read units from ifstream and put the data in the graph
+        * every row in the file should be in that pattern :
+        * 1 'unit1' =  'value' 'unit2'
+        * @param file repersent the read file that the function read from
+        */
         static void read_units (std::ifstream& file);
+        //constructor
+        NumberWithUnits(double num,  const std::string& unitIn);
+        NumberWithUnits( ){this->number=0;}
+        ~NumberWithUnits()= default;
 
-        NumberWithUnits(const double num, const std::string unitIn);
 
         //overloading operators +=,+,-=,-
         NumberWithUnits operator+() const;
@@ -44,28 +55,28 @@ namespace ariel {
         friend  std::istream& operator>>( std::istream &is, NumberWithUnits &nwu);
 
 
-
-        /////////////////////////need to change a bit//////////////////////////////////////////
         // prefix increment
-        NumberWithUnits& operator++()
-        {
-            // actual increment takes place here
-            return *this; // return new value by reference
+        NumberWithUnits& operator++(){
+            //increment by one the number
+            this->number= this->number+1;
+            return *this;
         }
 
         // postfix increment
-        NumberWithUnits operator++(int)
-        {
-            NumberWithUnits old = *this; // copy old value
-            operator++();  // prefix increment
-            return old;    // return old value
+        NumberWithUnits operator++(int){
+            // copy old value
+            NumberWithUnits old = *this;
+            // prefix increment
+            operator++();
+            // return old value
+            return old;
         }
 
         // prefix decrement
-        NumberWithUnits& operator--()
-        {
-            // actual decrement takes place here
-            return *this; // return new value by reference
+        NumberWithUnits& operator--(){
+            //  decrement by one the number
+            this->number = this->number -1;
+            return *this;
         }
 
         // postfix decrement
@@ -75,7 +86,6 @@ namespace ariel {
             operator--();  // prefix decrement
             return old;    // return old value
         }
-        /////////////////////////////////need to change a bit//////////////////////////////////////////
 
         //overloading operator *
         friend NumberWithUnits operator*(const NumberWithUnits &nwu, double n);
@@ -89,13 +99,19 @@ namespace ariel {
 
     private:
         //represent the value of the object (100 g , number = 100)
-        double number;
+        double number{};
         //represent the unit of the object (100 g , unit = g)
         std::string unit;
-
-        static wdg::WDGraph graph;
-
-        static void buildNodesReadUnits(std::string firstU, std::string secondU, double val);
+        /**
+        * buildNodesReadUnits function build Nodes and put the in the graph
+        * the function build according to this pattern :
+        * 1 'unit1' =  'value' 'unit2'
+        *
+        * @param firstU represent the first unit
+        * @param secondU represent the second unit
+        * @param val represent the value of the second unit
+        */
+        static void buildNodesReadUnits(const std::string& firstU, const std::string& secondU, double val);
     };
 
 
