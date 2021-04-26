@@ -3,6 +3,8 @@ project(numberWithUnits)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(main main.cpp NumberWithUnits.hpp NumberWithUnits.cpp)
-add_executable(demo Demo.cpp NumberWithUnits.hpp NumberWithUnits.cpp)
+set(SourceList NumberWithUnits.hpp NumberWithUnits.cpp wdgraph.hpp)
+
+add_executable(a/main a/main.cpp ${SourceList})
+add_executable(demo Demo.cpp ${SourceList})
 

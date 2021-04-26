@@ -10,8 +10,11 @@
 #include <stack>
 #include <list>
 #include <utility>
+#include "wdgraph.hpp"
+
 
 namespace ariel {
+
 
     class NumberWithUnits {
 
@@ -102,6 +105,9 @@ namespace ariel {
         double number{};
         //represent the unit of the object (100 g , unit = g)
         std::string unit;
+
+        //the graph is static because I want it to keep all the connction\rate from all objects NumberWithUnits
+        static WDGraph graph;
         /**
         * buildNodesReadUnits function build Nodes and put the in the graph
         * the function build according to this pattern :

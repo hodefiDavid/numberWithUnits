@@ -2,6 +2,7 @@
 // Created by david on 4/16/21.
 //
 #include "NumberWithUnits.hpp"
+#include "wdgraph.hpp"
 #include <algorithm>
 #include <string>
 #include <map>
@@ -9,143 +10,8 @@
 using namespace ariel;
 using namespace std;
 
-double TOLORANCE = 0.00001;
 
-/////////////////////////////////////////////////////////////////////////////////
-/////////////Node, hold the rate and the name of the unit////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-class Node {
-
-public:
-    //_nodeIn represent nodes that entering this node
-    //the double value represent the rate between two nodes,
-    //between tne node "km" and the node "m" the value of the double would be 1/1000 (because 1 km = 1000 m)
-    std::map<string, double> _nodeIn;//note: if NIS==USD==EUR so i cannot use double as key in the map
-    //_nodeOut represent nodes that you can reach from this node
-    //the double value represent the rate between two nodes,
-    //between tne node "km" and the node "m" the value of the double would be 1/1000 (because 1 km = 1000 m)
-    std::map<string, double> _nodeOut;
-
-    explicit Node(const std::string &unit);
-
-    ~Node() = default;
-
-
-    void addNodeIn(Node nd, double rate) {
-        this->_nodeIn[nd._unit] = rate;
-    }
-
-    void addNodeOut(Node nd, double rate) {
-        this->_nodeOut[nd._unit] = rate;
-    }
-
-    void setTag(int tag) {
-        this->_tag = tag;
-    }
-
-    int getTag() const { return this->_tag; }
-
-    std::string getUnit() const {
-        return this->_unit;
-    }
-
-private:
-    std::string _unit; //km/m/h/min...
-    //Temporal data which can be used by algorithms
-    int _tag;
-
-};
-
-Node::Node(const string &unit) {
-    this->_unit = unit;
-    this->_tag = 0;
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-/////////////WDGraph, hold the nodes in graph////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
-class WDGraph {
-
-public:
-    void resetTags(int num) {
-        //change the tags of all the node to the given one
-        for (auto &item : this->allNodes) {
-            item.second.setTag(num);
-        }
-    }
-
-    double shortestPath(std::string src, std::string dst) {
-        if (src == dst) { return 1; }
-        WDGraph::resetTags(0);
-
-        if (WDGraph::BFS(src, dst) != 0) {
-
-            bool check = true;
-            stack<string> s;
-            s.push(dst);
-            while (check) {
-                bool insert = false;
-                Node *temp = &allNodes[s.top()];
-                if (temp->getTag() != 1) {
-                    for (const auto &node :temp->_nodeIn) {
-                        if (allNodes[node.first].getTag() == temp->getTag() - 1 && !insert) {
-                            s.push(node.first);
-                            insert = true;
-                        }
-                    }
-                } else {
-                    check = false;
-                }
-            }
-            //calculating the rate between to node (ex: km->m, rate = 1000)
-            double rate = 1;
-            bool last = false;
-            while (!s.empty() && !last) {
-                Node *temp = &allNodes[s.top()];
-                s.pop();
-                rate = rate * (temp->_nodeOut[s.top()]);
-                if (allNodes[s.top()].getTag() == allNodes[dst].getTag()) {
-                    last = true;
-                }
-            }
-            return rate;
-
-        } else {
-            return -1;
-        }
-    }
-
-    std::map<std::string, Node> allNodes;
-
-    bool unitExist(const std::string &unit) const {
-        return this->allNodes.contains(unit);
-    }
-
-private:
-
-    double BFS(const std::string &src, std::string dst) {
-
-        allNodes[src].setTag(1);
-        stack<string> s;
-        s.push(src);
-        while (!s.empty()) {
-            Node *temp = &allNodes[s.top()];
-            s.pop();
-
-            for (auto it = temp->_nodeOut.begin(); it != temp->_nodeOut.end(); it++) {
-                if (allNodes[it->first].getTag() == 0 || temp->getTag() > allNodes[it->first].getTag()) {
-                    allNodes[it->first].setTag(temp->getTag() + 1);
-                    s.push(it->first);
-                }
-            }
-        }
-        return allNodes[dst].getTag();
-    }
-
-};
-
-//the graph is static because I want it to keep all the connction\rate from all objects NumberWithUnits
-static WDGraph graph;
+WDGraph NumberWithUnits::graph;
 
 
 /**
@@ -228,13 +94,13 @@ void NumberWithUnits::read_units(ifstream &file) {
             sendErrorReadUnits(row);
         }
         try {
-            val = stod(str.substr(0, ++len));
+            val = stod(str.substr(0, len + 1));
         }
             //checks for error
         catch (invalid_argument) {
             sendErrorReadUnits(row);
         }
-        str.erase(0, ++len);
+        str.erase(0, len + 1);
 
         //delete all the " " until we reach the second unit
         while (!str.compare(0, 1, " ")) {
@@ -277,7 +143,7 @@ NumberWithUnits NumberWithUnits::operator+=(const NumberWithUnits &other) {
     if (rate==-1){
         string error = "when you used the operator += you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+this->unit+", the unit that you entered was : "+other.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     this->number = this->number + rate*other.number;
     return *this;
@@ -288,7 +154,7 @@ NumberWithUnits NumberWithUnits::operator-=(const NumberWithUnits &other) {
     if (rate==-1){
         string error = "when you used the operator -= you tried to convert to different kind of unit that not "
                        "connected to the unit: "+this->unit+", the unit that you entered was : "+other.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     this->number = this->number - rate*other.number;
     return *this;
@@ -299,11 +165,11 @@ NumberWithUnits ariel::operator-(const NumberWithUnits &other) {
 }
 
 NumberWithUnits ariel::operator-(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate = NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator - you tried to convert to different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     double number = a.number - rate*b.number;
     return NumberWithUnits(number,a.unit);
@@ -314,22 +180,22 @@ NumberWithUnits ariel::operator+(const NumberWithUnits &other) {
 }
 
 NumberWithUnits ariel::operator+(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate = NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator + you tried to convert to different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error(error);
     }
     double number = a.number + rate*b.number;
     return NumberWithUnits(number,a.unit);
 }
 
 bool ariel::operator<(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
 
     bool ans = (a.number < rate*b.number) || (a.number < rate*b.number+TOLORANCE);
@@ -337,44 +203,44 @@ bool ariel::operator<(const NumberWithUnits &a, const NumberWithUnits &b) {
 }
 
 bool ariel::operator>(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     bool ans = (a.number > rate*b.number)||(a.number > rate*b.number-TOLORANCE);
     return ans;
 }
 
 bool ariel::operator<=(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     bool ans = (a.number <= rate*b.number) || (a.number <= rate*b.number + TOLORANCE);
     return ans;
 }
 
 bool ariel::operator>=(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     bool ans = (a.number >= rate*b.number) || (a.number + TOLORANCE >= rate*b.number);
     return ans;
 }
 
 bool ariel::operator==(const NumberWithUnits &a, const NumberWithUnits &b) {
-    double rate = graph.shortestPath(b.unit, a.unit);
+    double rate =  NumberWithUnits::graph.shortestPath(b.unit, a.unit);
     if (rate==-1){
         string error = "when you used the operator < you tried to convert to a different kind of unit that not "
                        "connected to the unit: "+a.unit+", the unit that you entered was : "+b.unit;
-        throw string (error);
+        throw runtime_error (error);
     }
     bool ans = (a.number == rate*b.number) || ((a.number <= rate*b.number + TOLORANCE)&& (a.number + TOLORANCE >= rate*b.number) );
     return ans;
@@ -414,7 +280,7 @@ std::istream &ariel::operator>>(istream &is, NumberWithUnits &nwu) {
     str.erase(0, ++len);
     len = str.find(']');
     if (len == -1) { sendErrorReadUnits(0);}
-    tempUnit = str.substr(0, ++len);
+    tempUnit = str.substr(0, len);
     erase(tempUnit, ' ');
 
     nwu.unit = tempUnit;
